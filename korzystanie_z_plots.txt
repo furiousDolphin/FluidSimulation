@@ -1,0 +1,32 @@
+from scripts import Plots
+import numpy as np
+from typing import Callable
+
+func1: Callable[[np.ndarray], np.ndarray] = lambda x: np.atan(x)
+func2: Callable[[np.ndarray], np.ndarray] = lambda x: np.sin(x)
+func3: Callable[[np.ndarray], np.ndarray] = lambda x: np.cos(x)
+
+x = np.linspace(-20, 20, 500)
+#y = func1(x)
+
+# plot = Plots.Plot((960, 540), xlabel="X", title="atan(x)")
+# plot.add(x=x, y=y)
+# plot.show()
+
+subplot_manager = Plots.SubplotManager((960, 540), title="subploty", max_cols=2)
+
+subplot1 = Plots.Subplot(xlabel="X", ylabel="Y", title="subplot1")
+subplot1.add(x, func1(x), label="atan(x)", color="green")
+
+subplot2 = Plots.Subplot(xlabel="X", ylabel="Y", title="subplot2")
+subplot2.add(x, func2(x), label="sin(x)", color="blue")
+
+subplot3 = Plots.Subplot(xlabel="X", ylabel="Y", title="subplot3")
+subplot3.add(x, func3(x), label="cos(x)", color="red")
+
+
+
+subplot_manager.add(subplot1)
+subplot_manager.add(subplot2)
+subplot_manager.add(subplot3)
+subplot_manager.show()
