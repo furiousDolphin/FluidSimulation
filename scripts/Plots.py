@@ -141,7 +141,7 @@ class SubplotManager():
             subplot.show(ax)
         fig.tight_layout()
         #fig.show()
-        print("ghsdhshjjhhhh")
+
         plt.show()
 
 #----------------------------------------

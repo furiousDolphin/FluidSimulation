@@ -1,6 +1,8 @@
 
 #define _USE_MATH_DEFINES
 
+#include <stdexcept>
+
 #include "MatrixBuilders.hpp"
 
 namespace FluidSimulation
@@ -45,7 +47,6 @@ namespace FluidSimulation
         Eigen::VectorXd nodes = ( Eigen::VectorXd::LinSpaced(N+1, 0, N) * (M_PI/N) ).array().cos();
         return ( (x2 - x1)/2 )*nodes.array() + ( (x2 + x1)/2 );
     }
-
 
     //algorytm cleshava
     Eigen::VectorXd EvaluateCheb( const Eigen::VectorXd& c, const Eigen::VectorXd& t )
@@ -102,5 +103,45 @@ namespace FluidSimulation
         }
         return t * bk1 - bk2 + c(0);
     }   
+
+    Eigen::MatrixXd HelmholtzMatrix(int N)
+    {
+        Eigen::MatrixXd D_hat = DifferentiationOperator(N);
+        Eigen::MatrixXd I = Eigen::MatrixXd::Identity(N+1, N+1);
+        Eigen::MatrixXd L_hat = -(2*2)*(D_hat*D_hat) + 2*I;
+
+        return L_hat;
+    }
+
+    Eigen::MatrixXd ChebMassMatrix(int N)
+    {
+        Eigen::VectorXd weights( N+1 );
+        
+        weights.fill(M_PI / 2.0);
+        weights[0] = M_PI;
+
+        Eigen::DiagonalMatrix<double, Eigen::Dynamic> M = weights.asDiagonal();
+
+        return M;
+    }
+
+    Eigen::VectorXd SolveHelmholtzDiffEq(const Eigen::MatrixXd& L_hat, const Eigen::VectorXd& f_hat)
+    {
+        int N = f_hat.size() - 1;
+        Eigen::MatrixXd M = ChebMassMatrix(N);
+
+        Eigen::LLT<Eigen::MatrixXd> llt{M};
+        Eigen::MatrixXd R = llt.matrixL().transpose();
+
+        Eigen::MatrixXd S = TransitionMatrix(N);
+
+        Eigen::MatrixXd A_tilde = R * ( L_hat * S );
+        Eigen::VectorXd b_tilde = R * f_hat;
+
+        Eigen::BDCSVD<Eigen::MatrixXd> svd{A_tilde, Eigen::ComputeFullU | Eigen::ComputeFullV};
+        Eigen::VectorXd d = svd.solve(b_tilde);
+
+        return d;
+    }
 }
 

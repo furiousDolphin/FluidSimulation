@@ -12,16 +12,12 @@
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
 
-
 #include <Eigen/Dense>
 #include <boost/numeric/odeint.hpp>
 #include <boost/numeric/odeint/external/eigen/eigen.hpp>
 #include <unsupported/Eigen/FFT>
 
-
 #include "MatrixBuilders.hpp"
-
-
 
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
@@ -30,22 +26,26 @@
 namespace py = pybind11;
 
 
-std::pair<Eigen::VectorXd, Eigen::VectorXd> run_cheb_test() 
+std::pair<Eigen::VectorXd, Eigen::VectorXd> run_simulation(int N) 
 {
-    std::size_t N = 50;
-    double x1 = -20;
-    double x2 =  20;
+    double x1 = 0;
+    double x2 = 1;
     
-    auto f = [](double x) { return std::atan(x); };
-
+    auto f = [](double x) { return std::sin(M_PI*x); };
 
     Eigen::VectorXd nodes = FluidSimulation::ChebNodes(N, x1, x2);
     Eigen::VectorXd f_vals = nodes.unaryExpr(f);
-    auto const& coeffs = FluidSimulation::ChebCoeffs(f_vals);
+
+    Eigen::VectorXd f_hat = FluidSimulation::ChebCoeffs(f_vals);
+    Eigen::MatrixXd L_hat = FluidSimulation::HelmholtzMatrix(N);
+
+    Eigen::VectorXd d = FluidSimulation::SolveHelmholtzDiffEq(L_hat, f_hat);
+    Eigen::MatrixXd S = FluidSimulation::TransitionMatrix(N);
+    Eigen::VectorXd c = S*d;
 
     Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(500, x1, x2);
     Eigen::VectorXd t = ( -2.0/(x1 - x2) )*x.array() + ( (x1 + x2)/(x1 - x2) );
-    Eigen::VectorXd y = FluidSimulation::EvaluateCheb(coeffs, t);
+    Eigen::VectorXd y = FluidSimulation::EvaluateCheb(c, t);
 
     return {x, y}; 
 }
@@ -54,12 +54,9 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> run_cheb_test()
 PYBIND11_MODULE(fluid_module, m) 
 {
     m.doc() = "Moduł symulacji płynów z obsługą wielomianów Czebyszewa";
-
-
-    m.def("run_cheb_test", &run_cheb_test, "Uruchamia test interpolacji Czebyszewa i zwraca (x, y)");
-
-
-    m.def("cheb_nodes", &FluidSimulation::ChebNodes);
-    m.def("cheb_coeffs", &FluidSimulation::ChebCoeffs);
-    m.def("evaluate_cheb", &FluidSimulation::EvaluateCheb);
+    m.def("run_simulation", &run_simulation, "przyjmuje N będące najwyższym stopniem wieomianu bazy cheb, zwraca (x, y) (odpowiedź na wymuszenie) ");
 }
+
+
+
+
