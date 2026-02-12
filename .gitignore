@@ -1,0 +1,57 @@
+# --- CMake ---
+build/
+.cmake/
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+_deps/
+
+# --- Visual Studio / MSVC ---
+.vs/
+out/
+*.sln
+*.vcxproj
+*.filters
+*.user
+*.suo
+*.db
+*.opendb
+*.pdb
+*.obj
+*.iobj
+*.ipdb
+*.log
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+.env
+.pytest_cache/
+
+# --- Kompilaty (Twój moduł) ---
+*.pyd
+*.so
+*.dll
+*.lib
+*.exp
+
+# --- VS Code ---
+.vscode/
+# Możesz odkomentować poniższe, jeśli chcesz współdzielić ustawienia edytora
+# !.vscode/settings.json
+# !.vscode/tasks.json
+# !.vscode/launch.json
+# !.vscode/extensions.json
+
+# --- Biblioteki zewnętrzne (skoro masz je na dysku E, to ich tu nie będzie, 
+# ale na wypadek gdybyś coś wrzucił do projektu) ---
+external/SDL2*
+external/eigen*
+external/
