@@ -29,7 +29,7 @@ find_package(SDL2_mixer REQUIRED)
 
 #---------------------------------------------------------
 
-pybind11_add_module(fluid_module main.cpp)
+pybind11_add_module(fluid_module main.cpp src/MatrixBuilders.cpp)
 
 target_include_directories(fluid_module PRIVATE 
     ${PROJECT_SOURCE_DIR}/include
