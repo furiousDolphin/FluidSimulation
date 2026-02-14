@@ -29,33 +29,39 @@ find_package(SDL2_mixer REQUIRED)
 
 #---------------------------------------------------------
 
-pybind11_add_module(fluid_module main.cpp src/MatrixBuilders.cpp)
+add_library(base_module_library INTERFACE)
 
-target_include_directories(fluid_module PRIVATE 
+target_include_directories(base_module_library INTERFACE 
     ${PROJECT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${Python_INCLUDE_DIRS}
-    ${SDL2_INCLUDE_DIR}
-    ${SDL2_IMAGE_INCLUDE_DIR}
-    ${SDL2_TTF_INCLUDE_DIR}
-    ${SDL2_MIXER_INCLUDE_DIR}
     "E:/boost_math_cpp/boost_1_88_0"
+    "${SDL2_PATH}/include"
+    "${SDL2_PATH}/include/SDL2"
+    ${SDL2_INCLUDE_DIRS}
 )
 
-target_link_libraries(fluid_module PRIVATE 
+target_link_libraries(base_module_library INTERFACE 
     eigen 
     Python::Module
-    ${SDL2_LIBRARY}
-    ${SDL2_IMAGE_LIBRARY}
-    ${SDL2_TTF_LIBRARY}
-    ${SDL2_MIXER_LIBRARY}
-    imm32.lib
-    winmm.lib
-    version.lib
-    setupapi.lib
+    ${SDL2_LIBRARIES}
+    ${SDL2_IMAGE_LIBRARIES}
+    ${SDL2_TTF_LIBRARIES}
+    ${SDL2_MIXER_LIBRARIES}
+    imm32.lib winmm.lib version.lib setupapi.lib
 )
 
-target_compile_definitions(fluid_module PRIVATE WITHOUT_NUMPY SDL_MAIN_HANDLED)
+target_compile_definitions(base_module_library INTERFACE WITHOUT_NUMPY SDL_MAIN_HANDLED)
+
+#---------------------------------------------------------
+
+pybind11_add_module(module_uno modules/module_uno.cpp src/MatrixBuilders.cpp)
+target_link_libraries(module_uno PRIVATE base_module_library)
+
+#---------------------------------------------------------
+
+pybind11_add_module(module_dos modules/module_dos.cpp) 
+target_link_libraries(module_dos PRIVATE base_module_library)
 
 #---------------------------------------------------------
 
