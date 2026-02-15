@@ -60,7 +60,7 @@ target_link_libraries(module_uno PRIVATE base_module_library)
 
 #---------------------------------------------------------
 
-pybind11_add_module(module_dos modules/module_dos.cpp) 
+pybind11_add_module(module_dos modules/module_dos.cpp src/WaveEquation.cpp src/MatrixBuilders.cpp) 
 target_link_libraries(module_dos PRIVATE base_module_library)
 
 #---------------------------------------------------------

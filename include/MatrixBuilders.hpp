@@ -68,11 +68,6 @@ namespace FluidSimulation
             Eigen::MatrixXd R_;
             Eigen::VectorXd c0_;
             Eigen::VectorXd b_tilde_0_;
-
-
-
-
-
     };
 }
 

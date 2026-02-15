@@ -22,6 +22,7 @@
 #include <unsupported/Eigen/FFT>
 
 #include "MatrixBuilders.hpp"
+#include "WaveEquation.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
@@ -29,122 +30,33 @@
 
 namespace py = pybind11;
 
-struct BCCoeffs {
-    double deriv1_coeff = 0.0; 
-    double func_coeff = 0.0;  
-    double target = 0.0;     
-    double boundary_x = 0.0;
-};
 
-BCCoeffs ParseBoundaryCondition(std::string expression) {
-    BCCoeffs coeffs;
-    std::smatch match;
-
-    //-----------------------------------------------------------------------------
-    std::regex deriv1_regex(R"(([-+]?\d*\.?\d*)\s*u'\(([-+]?\d*\.?\d*)\))");
-    //--------------------------------------------------------
-    std::regex func_regex(R"(([-+]?\d*\.?\d*)\s*u\(([-+]?\d*\.?\d*)\))");
-    //-----------------------------------------------------------------------------
-    std::regex target_regex(R"(=\s*([-+]?\d*\.?\d*))");
-    //-----------------------------------------------------------------------------
-
-
-    if (std::regex_search(expression, match, deriv1_regex)) 
-    {
-        std::string val = match[1].str();
-        coeffs.deriv1_coeff = (val == "" || val == "+") ? 1.0 : (val == "-") ? -1.0 : std::stod(val);
-        coeffs.boundary_x = std::stod(match[2].str());
-    }
-
-    if (std::regex_search(expression, match, func_regex)) 
-    {
-        std::string val = match[1].str();
-        coeffs.func_coeff = (val == "" || val == "+") ? 1.0 : (val == "-") ? -1.0 : std::stod(val);
-        coeffs.boundary_x = std::stod(match[2].str());
-    }
-    
-    if (std::regex_search(expression, match, target_regex)) 
-    { coeffs.target = std::stod(match[1].str()); }
-
-    return coeffs;
-}
-
-
-
-
-struct LOperatorCoeffs 
+PYBIND11_MODULE(module_dos, m)
 {
-    double deriv2_coeff = 0.0;
-    double deriv1_coeff = 0.0; 
-    double func_coeff = 0.0;       
-};
+    m.doc() = "";
 
-LOperatorCoeffs ParseLOperator(std::string expression) {
-    LOperatorCoeffs coeffs;
-    std::smatch match;
-
-    //-----------------------------------------------------------------------------
-    std::regex deriv2_regex(R"(([-+]?\d*\.?\d*)\s*u'')");
-    //-----------------------------------------------------------------------------
-    std::regex deriv1_regex(R"(([-+]?\d*\.?\d*)\s*u')");
-    //-----------------------------------------------------------------------------
-    std::regex func_regex(R"(([-+]?\d*\.?\d*)\s*u)");
-    //-----------------------------------------------------------------------------
-
-
-    if (std::regex_search(expression, match, deriv2_regex)) 
-    {
-        std::string val = match[1].str();
-        coeffs.deriv2_coeff = (val == "" || val == "+") ? 1.0 : (val == "-") ? -1.0 : std::stod(val);
-    }
-
-    if (std::regex_search(expression, match, deriv1_regex)) 
-    {
-        std::string val = match[1].str();
-        coeffs.func_coeff = (val == "" || val == "+") ? 1.0 : (val == "-") ? -1.0 : std::stod(val);
-    }
+    py::class_<FluidSimulation::WaveEquation>(m, "WaveEquation")
+        .def(py::init<std::string, std::string, double, double, int>(), 
+             py::arg("left_BC_str"),
+             py::arg("right_BC_str"),
+             py::arg("c_sq"),
+             py::arg("gamma"),
+             py::arg("N"));
     
-    if (std::regex_search(expression, match, func_regex)) 
-    { coeffs.func_coeff = std::stod(match[1].str()); }
-
-    return coeffs;
+    py::class_<FluidSimulation::WaveSimulation>(m, "WaveSimulation")
+        .def(py::init<FluidSimulation::WaveEquation&, const Eigen::VectorXd&>(),
+             py::arg("wave_equation"),
+             py::arg("x_dense"))
+        .def("set_u_v", 
+             &FluidSimulation::WaveSimulation::set_u_v, 
+             "opis",
+             py::arg("u_dense"),
+             py::arg("v_dense"))
+        .def("step", 
+             &FluidSimulation::WaveSimulation::step,
+             "opis")
+        .def("get_u_v", 
+             &FluidSimulation::WaveSimulation::get_u_v,
+             "opis");
 }
 
-
-Eigen::VectorXd InterpolateToChebNodes(
-    const Eigen::VectorXd& x_dense, 
-    const Eigen::VectorXd& y_dense, 
-    const Eigen::VectorXd& cheb_nodes)
-{
-    std::vector<double> x_vec{ x_dense.data(), x_dense.data() + x_dense.size() };
-    std::vector<double> y_vec{ x_dense.data(), x_dense.data() + x_dense.size() };
-
-    auto spline = boost::math::interpolators::makima<std::vector<double>>(std::move(x_vec), std::move(y_vec));
-
-    Eigen::VectorXd y_at_cheb{cheb_nodes.size()};
-
-    double x_min = x_dense.minCoeff();
-    double x_max = x_dense.maxCoeff();
-
-    for ( int i = 0; i < cheb_nodes.size(); i++ )
-    { 
-        double target_x = std::clamp(cheb_nodes(i), x_min, x_max);
-        y_at_cheb(i) = spline(target_x);
-    }
-    return y_at_cheb;
-}
-
-
-
-
-
-
-// BCCoeffs bc = parseBoundaryCondition("2u'(1) + 1u(1) = 0");
-
-// auto L2 = [bc](int n) {
-//     // 2*u'(1) + 1*u(1) staje się:
-//     // bc.deriv_coeff * (2 * n^2) + bc.func_coeff * (1)
-//     return bc.deriv_coeff * (2.0 * n * n) + bc.func_coeff * 1.0;
-// };
-
-// solver.set_bc(left="1u(0) = 0", right="2u'(1) + 1u(1) = 0")
