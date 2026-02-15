@@ -20,7 +20,7 @@ x = np.linspace(0, L, 500)  # Gęsta siatka do rysowania
 
 # 2. Inicjalizacja silnika C++
 # (Ustawiamy c_sq i gamma według uznania)
-eq = m.WaveEquation("u(0)=0", f"u({L})=0", c_sq=100.0, gamma=0.1, N=N)
+eq = m.WaveEquation("u(0)=0", f"u({L})=0", c_sq=2000.0, gamma=10, N=N)
 sim = m.WaveSimulation(eq, x)
 
 # 3. Ustawienie warunku początkowego (np. uderzenie w środek)

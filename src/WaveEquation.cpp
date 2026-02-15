@@ -184,7 +184,7 @@ namespace FluidSimulation
         eq_{wave_equation},
         x_dense_{x_dense},
         t_{0.0},
-        dt_{0.0001},
+        dt_{0.0002},
         state_{2*( (eq_.N_+1)-2 )}
     {
         cheb_t_dense_ = ( -2.0/(eq_.x1_ - eq_.x2_) )*x_dense_.array() + ( (eq_.x1_ + eq_.x2_)/(eq_.x1_ - eq_.x2_) );
