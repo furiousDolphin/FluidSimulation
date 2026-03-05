@@ -34,7 +34,7 @@ ax.set_ylim(-1.5, 1.5)
 ax.set_title("Symulacja Spektralna Wody")
 
 start_time = time.time()
-PAUSE_DURATION = 10.0 
+PAUSE_DURATION = 5.0 
 
 def update(frame):
 
